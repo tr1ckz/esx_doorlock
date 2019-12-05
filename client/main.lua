@@ -15,12 +15,10 @@ ESX					= nil
 Citizen.CreateThread(function()
 	while ESX == nil do
 		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-		Citizen.Wait(0)
-	end
+		Citizen.Wait(0)	end
 
 	while ESX.GetPlayerData().job == nil do
-		Citizen.Wait(10)
-	end
+		Citizen.Wait(0)	end
 
 	ESX.PlayerData = ESX.GetPlayerData()
 
@@ -41,20 +39,29 @@ end)
 
 Citizen.CreateThread(function()
 	while true do
-		Citizen.Wait(0)
-		local playerCoords = GetEntityCoords(PlayerPedId())
+		Citizen.Wait(0)		local playerCoords = GetEntityCoords(PlayerPedId())
 
 		for i=1, #Config.DoorList do
 			local doorID   = Config.DoorList[i]
 			local distance = GetDistanceBetweenCoords(playerCoords, doorID.objCoords.x, doorID.objCoords.y, doorID.objCoords.z, true)
 			local isAuthorized = IsAuthorized(doorID)
 			local isGate = doorID.gate
+			local isCell = doorID.cell
 			local maxDistance = 10.25
 			local unlockDistance = 1.75
-			local unlockgateDistance = 200.5
-			local textDistance = 10
+			local unlockgateDistance = 9.5
+			local unlockcellDistance = 0.5
+			local cellDistance = 1
+			local textDistance = 3
+			local gateTextDistance = 9
 			if doorID.distance then
 				maxDistance = doorID.distance
+			end
+			if isCell then
+				textDistance = cellDistance 
+			end
+			if isGate then
+				textDistance = gateTextDistance
 			end
 
 			if distance < maxDistance then
@@ -75,6 +82,9 @@ Citizen.CreateThread(function()
 					displayText = _U('press_button', displayText)
 				elseif isAuthorized and unlockDistance > distance then
 					displayText = _U('press_button', displayText)
+				elseif isAuthorized and unlockcellDistance > distance and isCell ~= nil then
+					displayText = _U('press_button', displayText)
+
 
 				end
 
@@ -91,12 +101,18 @@ Citizen.CreateThread(function()
 						doorID.locked = not doorID.locked
 
 						TriggerServerEvent('esx_doorlock:updateState', i, doorID.locked) -- Broadcast new state of the door to everyone
+
+				elseif IsControlJustReleased(0, Keys['E']) and isAuthorized and unlockcellDistance > distance then
+					
+						doorID.locked = not doorID.locked
+
+						TriggerServerEvent('esx_doorlock:updateState', i, doorID.locked) -- Broadcast new state of the door to everyone
 					
 							
 						
 					end
 				end
-			end
+			end	
 		end
 	end
 end)
